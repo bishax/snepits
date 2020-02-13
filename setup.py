@@ -1,3 +1,5 @@
+import glob
+import os
 from distutils.extension import Extension
 
 import numpy
@@ -23,7 +25,7 @@ pyovpyx = Extension(
 setup(
     name="snepits",
     packages=find_packages(),
-    package_dir={'snepits': 'snepits/', '_models_spec': 'snepits/'},
+    package_dir={'snepits': 'snepits/'},
     version="0.1.0",
     description="Inference for stochastic epidemic household models",
     author="Alex Bishop",
@@ -31,3 +33,10 @@ setup(
     ext_modules=cythonize([models_spec, pyovpyx]),
     include_dirs=[numpy.get_include()],
 )
+
+# XXX Copy object files to correct directory
+try:
+    f = glob.glob('*.so')
+    [os.rename(fi, f"snepits/{fi}") for fi in f]
+except:
+    pass
