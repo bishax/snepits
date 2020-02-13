@@ -42,6 +42,7 @@ class Model(metaclass=ABCMeta):
         dim (int): Number of parameters
         sparse (bool): If True use sparse solver
     """
+
     _eigs = False
 
     def __init__(self, Ntup, params, seed=None, freq_dep=True):
@@ -53,10 +54,10 @@ class Model(metaclass=ABCMeta):
             freq_dep (bool, optional): Frequency dependent transmission if True
         """
         # XXX:
-        self.call_counter = {'solve': 0, 'grad': 0}
+        self.call_counter = {"solve": 0, "grad": 0}
 
         if len(params) != self.dim:
-            msg = f'Expected `params` of length {self.dim}, not {len(params)}'
+            msg = f"Expected `params` of length {self.dim}, not {len(params)}"
             raise ValueError(msg)
 
         # Set seed
@@ -70,9 +71,9 @@ class Model(metaclass=ABCMeta):
             np.random.seed(self.seed)
 
         if not isinstance(Ntup, np.ndarray):  # Ensure population sizes are a list
-            assert 0, 'Ntup is not an array'
+            assert 0, "Ntup is not an array"
         if len(Ntup) > 1:
-            msg = f'Substructures do not total {Ntup}'
+            msg = f"Substructures do not total {Ntup}"
             # assert sum(Ntup)-Ntup[0] == Ntup[0], msg
         self.Ntup = Ntup
         self.N = Ntup.sum()
@@ -98,7 +99,7 @@ class Model(metaclass=ABCMeta):
 
     def get_sol(self):
         # Solve model by sparse or dense methods
-        self.call_counter['solve'] += 1
+        self.call_counter["solve"] += 1
         if self.sparse is False:
             return self.__get_sol_dense()
         else:
@@ -117,7 +118,7 @@ class Model(metaclass=ABCMeta):
         try:
             e, v = eig(M)  # Eigenvalues and Eigenvectors
         except Exception as rte:
-            rte.args = (rte.args[0]+' at params: %s' % list(self.params),)
+            rte.args = (rte.args[0] + " at params: %s" % list(self.params),)
             raise rte
 
         i = np.argmin(np.abs(e))  # Find dominant eigenvalue
@@ -129,21 +130,20 @@ class Model(metaclass=ABCMeta):
 
     def __get_sol_sparse(self):
         self.M = self.gen_mat()  # Generate transition matrix
-        self.M = self.M + eye(self.M.shape[0],
-                              self.M.shape[1]) * 1e-10  # Prevent singularity
+        self.M = (
+            self.M + eye(self.M.shape[0], self.M.shape[1]) * 1e-10
+        )  # Prevent singularity
         try:
             if not self._eigs:
-                self.p = np.abs(bicgstab(self.M, self.z,
-                    x0=self.p)[0])
+                self.p = np.abs(bicgstab(self.M, self.z, x0=self.p)[0])
                 self.p /= norm(self.p, 1)
             else:
-                [e, self.v] = eigs(self.M, 1, v0=self.v, sigma=0, which='LM')
-                self.p = np.abs(self.v.real.ravel() / norm(self.v.real.ravel(),
-                    1))
+                [e, self.v] = eigs(self.M, 1, v0=self.v, sigma=0, which="LM")
+                self.p = np.abs(self.v.real.ravel() / norm(self.v.real.ravel(), 1))
         except (ValueError, RuntimeError) as rte:
-            rte.args = (rte.args[0]+' at params: %s' % list(self.params),)
-            logger.warning('NaNs:', np.isnan(self.p).sum())
-            logger.warning('infs:', np.isinf(self.p).sum())
+            rte.args = (rte.args[0] + " at params: %s" % list(self.params),)
+            logger.warning("NaNs:", np.isnan(self.p).sum())
+            logger.warning("infs:", np.isinf(self.p).sum())
             raise rte
 
         # XXX: Hacky
@@ -156,20 +156,20 @@ class Model(metaclass=ABCMeta):
         Get gradient of log likelihood using finite differences.
         step (opt): stepsize
         """
-        self.call_counter['grad'] += 1
+        self.call_counter["grad"] += 1
         params = self.params
         p1 = self.p.copy()  # Store original matrix
         assert not np.any(np.isinf(np.log(p1))), (params, p1)
         tmp = np.zeros(self.dim)
         for i in range(self.dim):
             # Calculate perturbed solution:
-            tmp[i-1] = 0
+            tmp[i - 1] = 0
             tmp[i] += step
             self.param_update(params + tmp)
             p2 = self.get_sol()
-            assert not np.any(np.isinf(np.log(p2))), 'p2'
+            assert not np.any(np.isinf(np.log(p2))), "p2"
             # Approximate derivate
-            self.grads[i, :] = (np.log(p2) - np.log(p1))/step
+            self.grads[i, :] = (np.log(p2) - np.log(p1)) / step
 
         # Return to starting state:
         self.param_update(params)
@@ -210,11 +210,13 @@ class Model(metaclass=ABCMeta):
     def data_transform(self, data):
         """ From state space to state index """
         from _models_spec import el_f_gen
+
         return el_f_gen(self.Ntup, data)
 
     def idx_transform(self, idx):
         """ From state index to state space """
         from _models_spec import idx_to_state
+
         return idx_to_state(idx, self.A, self.R, self.Ntup)
 
 
@@ -252,8 +254,8 @@ class Population(metaclass=ABCMeta):
             data (numpy.array, optional): Numbers infected for each class
                 One row per household, one column per class.
         """
-        #XXX:
-        self.call_counter = {'LL': 0, 'grad': 0}
+        # XXX:
+        self.call_counter = {"LL": 0, "grad": 0}
         self.save_calc = []
 
         # Set seed
@@ -287,7 +289,7 @@ class Population(metaclass=ABCMeta):
             self.t_params = None
             if data.ndim == 1:
                 data = data.reshape((data.size, 1))
-            msg = 'Num of data points does not match that of population sizes'
+            msg = "Num of data points does not match that of population sizes"
             assert self.m == data.shape[0], msg
 
             self.data = data[self.__HHidx__, :]  # Sort according to HHsizes
@@ -302,25 +304,43 @@ class Population(metaclass=ABCMeta):
         # each meta-population type
         self.sub_pops = []
         for i in range(self.uniHHsizes.shape[0]):
-            self.sub_pops.append(self.subclass(self.uniHHsizes[i, :],
-                                               self.params, self.freq_dep))
+            self.sub_pops.append(
+                self.subclass(self.uniHHsizes[i, :], self.params, self.freq_dep)
+            )
 
     def _process_HHs(self):
-        from numpy import sort, lexsort, ascontiguousarray, dtype, void, unique, hstack, newaxis, where, all
+        from numpy import (
+            sort,
+            lexsort,
+            ascontiguousarray,
+            dtype,
+            void,
+            unique,
+            hstack,
+            newaxis,
+            where,
+            all,
+        )
+
         # lexsort by total sizes and then sizes starting from last column
-        idx = lexsort(hstack([self.HHsizes.sum(axis=1)[:, newaxis], self.HHsizes]).T[::-1, :])
+        idx = lexsort(
+            hstack([self.HHsizes.sum(axis=1)[:, newaxis], self.HHsizes]).T[::-1, :]
+        )
         self.HHsizes = self.HHsizes[idx, :]
 
         # Find unique combinations of meta-population sizes by viewing each row
         # as one long element
-        b = ascontiguousarray(self.HHsizes).\
-            view(dtype((void, self.HHsizes.dtype.itemsize *
-                        self.HHsizes.shape[1])))
+        b = ascontiguousarray(self.HHsizes).view(
+            dtype((void, self.HHsizes.dtype.itemsize * self.HHsizes.shape[1]))
+        )
         _, idx2 = unique(b, return_index=True)
         self.uniHHsizes = self.HHsizes[sort(idx2), :]
 
         # Create lookup table
-        d = [where(all(self.HHsizes == HHs, axis=1))[0] for i, HHs in enumerate(self.uniHHsizes)]
+        d = [
+            where(all(self.HHsizes == HHs, axis=1))[0]
+            for i, HHs in enumerate(self.uniHHsizes)
+        ]
         self.HHlookup = {i: j for i, j in enumerate(d)}
         self.rev_HHlookup = {jj: i for i, j in enumerate(d) for jj in j}
 
@@ -329,30 +349,34 @@ class Population(metaclass=ABCMeta):
 
         self.__HHidx__ = idx  # Needed to sort data (if exists)
 
-
     def data_transform(self, data):
         """ From state space to state index """
         from numpy import array, int
+
         for i, HH in enumerate(self.uniHHsizes):
             hhidxs = self.HHlookup[i]
-            self.infected[hhidxs] = array([
-                self.sub_pops[i].data_transform(data[j])
-                for j in hhidxs], dtype=int)
+            self.infected[hhidxs] = array(
+                [self.sub_pops[i].data_transform(data[j]) for j in hhidxs], dtype=int
+            )
             # TODO GET THI RIGHT
         return self.infected
 
     def idx_transform(self, idx):
         """ From state index to state space """
         from numpy import array, int, empty
-        self.data = empty((self.infected.shape[0], self.A*self.R))
+
+        self.data = empty((self.infected.shape[0], self.A * self.R))
         for i, HH in enumerate(self.uniHHsizes):
             hhidxs = self.HHlookup[i]
-            self.data[hhidxs] = array([self.sub_pops[i].idx_transform(self.infected[j]) for j in hhidxs], dtype=int)
+            self.data[hhidxs] = array(
+                [self.sub_pops[i].idx_transform(self.infected[j]) for j in hhidxs],
+                dtype=int,
+            )
         return self.data
 
     def calc_LL(self, LL_old=0, r=0):
         """ Calculate log-likelihood of meta-population model """
-        self.call_counter['LL'] += 1
+        self.call_counter["LL"] += 1
         # Return -inf if any parameter is not strictly positive
         if np.any([(p <= 0 or np.isinf(p)) for p in self.params]):
             self.LL = -np.inf
@@ -373,20 +397,24 @@ class Population(metaclass=ABCMeta):
             else:
                 # Add log likelihood of individual meta-population to total LL:
                 for j_ind, j in enumerate(uI):
-                    LL += np.log(tmp[int(j)])*uIc[j_ind]
+                    LL += np.log(tmp[int(j)]) * uIc[j_ind]
 
                 # Early reject
-                if (not (np.log(r) < (LL - LL_old))
-                # if ((np.log(r) >= (LL - LL_old))
-                        and (i != self.uniHHsizes.shape[0]-1)):
+                if (
+                    not (np.log(r) < (LL - LL_old))
+                    # if ((np.log(r) >= (LL - LL_old))
+                    and (i != self.uniHHsizes.shape[0] - 1)
+                ):
                     self.save_calc.append((r, LL, LL_old, i))
                     return -np.inf
 
         self.LL = LL
 
         if np.isnan(self.LL):
-            warnings.warn('NaN LL encountered due to poor conditioning,\
-                          attempting reconditioning...')
+            warnings.warn(
+                "NaN LL encountered due to poor conditioning,\
+                          attempting reconditioning..."
+            )
             for i in range(self.uniHHsizes.shape[0]):
                 p = self.sub_pops[i].p
                 # Find negative probabilities
@@ -403,18 +431,22 @@ class Population(metaclass=ABCMeta):
 
                 # Add log likelihood of individual meta-population to total LL
                 for j_ind, j in enumerate(uI):
-                    LL += np.log(self.sub_pops[i].p[int(j)])*uIc[j_ind]
+                    LL += np.log(self.sub_pops[i].p[int(j)]) * uIc[j_ind]
             self.LL = LL
 
         if np.isnan(self.LL):
-            print('NaN params:', list(self.params))
+            print("NaN params:", list(self.params))
             for i in range(len(self.uniHHsizes)):
                 if np.any(self.sub_pops[i].p < 0):
-                    logger.warning('Log likelihood is NaN because a solution\
-                                     is negative & likely poorly conditioned')
-            logger.warning('Log likelihood is NaN. No solution is negative\
-                             therefore not likely a conditioning problem')
-            self.LL = - np.inf
+                    logger.warning(
+                        "Log likelihood is NaN because a solution\
+                                     is negative & likely poorly conditioned"
+                    )
+            logger.warning(
+                "Log likelihood is NaN. No solution is negative\
+                             therefore not likely a conditioning problem"
+            )
+            self.LL = -np.inf
         self._unsolved = False
 
         return self.LL
@@ -435,15 +467,15 @@ class Population(metaclass=ABCMeta):
             recalc (bool, optional): If False assumes system already
                 solved for current params
         """
-        self.call_counter['grad'] += 1
+        self.call_counter["grad"] += 1
         # Solve system
         if recalc or self._unsolved:
             [pop.get_sol() for pop in self.sub_pops]
 
         # Return -inf if any parameters are not strictly positive
         if np.any([p <= 0 for p in self.params]):
-            self.LL = - np.inf
-            return - np.inf
+            self.LL = -np.inf
+            return -np.inf
 
         self.grad = np.zeros(self.dim)
         LL = 0
@@ -458,8 +490,8 @@ class Population(metaclass=ABCMeta):
 
             # Add log likelihood of individual meta-population to total LL:
             for j_ind, j in enumerate(uI.astype(int)):
-                LL += np.log(tmp[j])*uIc[j_ind]
-                self.grad += tmp2[:, j]*uIc[j_ind]
+                LL += np.log(tmp[j]) * uIc[j_ind]
+                self.grad += tmp2[:, j] * uIc[j_ind]
 
         self.LL = LL
         self._unsolved = False

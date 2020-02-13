@@ -8,9 +8,21 @@ logger = logging.getLogger(__name__)
 
 class SIS_A2R3(Model):
 
-    param_l = ['beta_l', 'beta_m', 'beta_h', 'beta_C',
-               'rho_m', 'rho_h', 'rho_C', 'eps', 'g_m', 'g_h', 'g_C', 'logit_alpha']
-    risk_l = ['Na', 'Nc']
+    param_l = [
+        "beta_l",
+        "beta_m",
+        "beta_h",
+        "beta_C",
+        "rho_m",
+        "rho_h",
+        "rho_C",
+        "eps",
+        "g_m",
+        "g_h",
+        "g_C",
+        "logit_alpha",
+    ]
+    risk_l = ["Na", "Nc"]
     sparse = True
     R = 3
 
@@ -34,12 +46,12 @@ class SIS_A2R3(Model):
         rhocm = self.rho_m * self.rho_C
         rhoch = self.rho_h * self.rho_C
         alpha = expit(self.logit_alpha)
-        bal *= 1 / (N - 1)**alpha
-        bcl *= 1 / (N - 1)**alpha
-        bam *= 1 / (N - 1)**alpha
-        bcm *= 1 / (N - 1)**alpha
-        bah *= 1 / (N - 1)**alpha
-        bch *= 1 / (N - 1)**alpha
+        bal *= 1 / (N - 1) ** alpha
+        bcl *= 1 / (N - 1) ** alpha
+        bam *= 1 / (N - 1) ** alpha
+        bcm *= 1 / (N - 1) ** alpha
+        bah *= 1 / (N - 1) ** alpha
+        bch *= 1 / (N - 1) ** alpha
         eps = self.eps
         gal = 1
         gam = self.g_m
@@ -47,12 +59,35 @@ class SIS_A2R3(Model):
         gcl = self.g_C
         gcm = self.g_m * self.g_C
         gch = self.g_h * self.g_C
-        self.M = SIS_A2R3_rho(Na, Nc, bal, bam, bah, bcl, bcm, bch, gal, gam, gah, gcl, gcm, gch, eps, rhoal, rhoam, rhoah, rhocl, rhocm, rhoch, 10)
+        self.M = SIS_A2R3_rho(
+            Na,
+            Nc,
+            bal,
+            bam,
+            bah,
+            bcl,
+            bcm,
+            bch,
+            gal,
+            gam,
+            gah,
+            gcl,
+            gcm,
+            gch,
+            eps,
+            rhoal,
+            rhoam,
+            rhoah,
+            rhocl,
+            rhocm,
+            rhoch,
+            10,
+        )
         return self.M
 
 
 class SIS_A2R3_pop(Population):
-    '''
+    """
     Initialise SIS_ACR_pop model class.
     Inputs:
     data (array) - first column  - HH sizes (total)
@@ -65,7 +100,8 @@ class SIS_A2R3_pop(Population):
     params (tuple)  TODO
 
     NOTE: rho_A  - Adult susceptibility - is always 1
-    '''
+    """
+
     subclass = SIS_A2R3
     param_l = subclass.param_l
     risk_l = subclass.risk_l
@@ -73,6 +109,7 @@ class SIS_A2R3_pop(Population):
 
     def calc_prior(self):
         from numpy import inf, array
+
         if self.beta_m > self.beta_h:
             return -inf
         elif self.beta_l > self.beta_m:
@@ -83,15 +120,26 @@ class SIS_A2R3_pop(Population):
             return 0
 
     def __str__(self):
-        return 'SIS_A2R3_pop: m = %d, n = %d' % (self.m, self.N)
+        return "SIS_A2R3_pop: m = %d, n = %d" % (self.m, self.N)
 
 
 class SIS_A2R3_fd(Model):
 
-    param_l = ['beta_l', 'beta_m', 'beta_h', 'beta_C',
-               'rho_m', 'rho_h', 'rho_C', 'eps', 'g_m', 'g_h', 'g_C']
+    param_l = [
+        "beta_l",
+        "beta_m",
+        "beta_h",
+        "beta_C",
+        "rho_m",
+        "rho_h",
+        "rho_C",
+        "eps",
+        "g_m",
+        "g_h",
+        "g_C",
+    ]
     dim = len(param_l)
-    risk_l = ['Na', 'Nc']
+    risk_l = ["Na", "Nc"]
     sparse = True
     R = 3
 
@@ -126,14 +174,35 @@ class SIS_A2R3_fd(Model):
         gcl = self.g_C
         gcm = self.g_m * self.g_C
         gch = self.g_h * self.g_C
-        self.M = SIS_A2R3_rho(Na, Nc, bal, bam, bah, bcl, bcm, bch, gal, gam,
-                gah, gcl, gcm, gch, eps, rhoal, rhoam, rhoah, rhocl, rhocm,
-                rhoch, 12)
+        self.M = SIS_A2R3_rho(
+            Na,
+            Nc,
+            bal,
+            bam,
+            bah,
+            bcl,
+            bcm,
+            bch,
+            gal,
+            gam,
+            gah,
+            gcl,
+            gcm,
+            gch,
+            eps,
+            rhoal,
+            rhoam,
+            rhoah,
+            rhocl,
+            rhocm,
+            rhoch,
+            12,
+        )
         return self.M
 
 
 class SIS_A2R3_fd_pop(Population):
-    '''
+    """
     Initialise SIS_ACR_pop model class.
     Inputs:
     data (array) - first column  - HH sizes (total)
@@ -146,7 +215,8 @@ class SIS_A2R3_fd_pop(Population):
     params (tuple)  TODO
 
     NOTE: rho_A  - Adult susceptibility - is always 1
-    '''
+    """
+
     subclass = SIS_A2R3_fd
     param_l = subclass.param_l
     risk_l = subclass.risk_l
@@ -155,6 +225,7 @@ class SIS_A2R3_fd_pop(Population):
 
     def calc_prior(self):
         from numpy import inf, array
+
         if self.beta_m > self.beta_h:
             return -inf
         elif self.beta_l > self.beta_m:
@@ -177,27 +248,31 @@ class SIS_A2R3_fd_pop(Population):
             ym = data[i, 4]
             yh = data[i, 5]
             self.infected[i] = el_f_A2_R3(
-                    Na,
-                    Nc,
-                    xl,
-                    xm,
-                    yl,
-                    ym,
-                    Na - xl - xm - xh,
-                    Nc - yl - ym - yh,
-                    )
+                Na, Nc, xl, xm, yl, ym, Na - xl - xm - xh, Nc - yl - ym - yh,
+            )
         return self.infected
 
     def __str__(self):
-        return 'SIS_A2R3_fd_pop: m = %d, n = %d' % (self.m, self.N)
+        return "SIS_A2R3_fd_pop: m = %d, n = %d" % (self.m, self.N)
 
 
 class SIS_A3R3(Model):
 
-    param_l = ['beta_l', 'beta_m', 'beta_h', 'beta_I', 'beta_C',
-               'rho_m', 'rho_h', 'eps', 'g_m', 'g_h', 'alpha']
+    param_l = [
+        "beta_l",
+        "beta_m",
+        "beta_h",
+        "beta_I",
+        "beta_C",
+        "rho_m",
+        "rho_h",
+        "eps",
+        "g_m",
+        "g_h",
+        "alpha",
+    ]
     dim = len(param_l)
-    risk_l = ['Na', 'Nc', 'Ni']
+    risk_l = ["Na", "Nc", "Ni"]
     sparse = True
     R = 3
 
@@ -227,12 +302,12 @@ class SIS_A3R3(Model):
         rhoim = self.rho_m
         rhoih = self.rho_h
         alpha = self.alpha
-        bal *= 1 / (N - 1)**alpha
-        bcl *= 1 / (N - 1)**alpha
-        bam *= 1 / (N - 1)**alpha
-        bcm *= 1 / (N - 1)**alpha
-        bah *= 1 / (N - 1)**alpha
-        bch *= 1 / (N - 1)**alpha
+        bal *= 1 / (N - 1) ** alpha
+        bcl *= 1 / (N - 1) ** alpha
+        bam *= 1 / (N - 1) ** alpha
+        bcm *= 1 / (N - 1) ** alpha
+        bah *= 1 / (N - 1) ** alpha
+        bch *= 1 / (N - 1) ** alpha
         eps = self.eps
         gal = 1
         gam = self.g_m
@@ -244,18 +319,47 @@ class SIS_A3R3(Model):
         gim = self.g_m
         gih = self.g_h
 
-        self.M = SIS_A3R3_rho(Na, Nc, Ni,
-                bal, bam, bah, bcl, bcm, bch, bil, bim, bih,
-                gal, gam, gah, gcl, gcm, gch, gil, gim, gih,
-                eps,
-                rhoal, rhoam, rhoah, rhocl, rhocm, rhoch, rhoil, rhoim, rhoih,
-                15)
+        self.M = SIS_A3R3_rho(
+            Na,
+            Nc,
+            Ni,
+            bal,
+            bam,
+            bah,
+            bcl,
+            bcm,
+            bch,
+            bil,
+            bim,
+            bih,
+            gal,
+            gam,
+            gah,
+            gcl,
+            gcm,
+            gch,
+            gil,
+            gim,
+            gih,
+            eps,
+            rhoal,
+            rhoam,
+            rhoah,
+            rhocl,
+            rhocm,
+            rhoch,
+            rhoil,
+            rhoim,
+            rhoih,
+            15,
+        )
         return self.M
 
 
 class SIS_A3R3_pop(Population):
-    '''
-    '''
+    """
+    """
+
     subclass = SIS_A3R3
     param_l = subclass.param_l
     risk_l = subclass.risk_l
@@ -279,12 +383,17 @@ class SIS_A3R3_pop(Population):
             zm = data[i, 7]
             zh = data[i, 8]
             self.infected[i] = el_f_A3_R3(
-                    Na, Nc, Ni,
-                    xl, xm,
-                    yl, ym,
-                    zl, zm,
-                    Na - xl - xm - xh,
-                    Nc - yl - ym - yh,
-                    Ni - zl - zm - zh,
-                    )
+                Na,
+                Nc,
+                Ni,
+                xl,
+                xm,
+                yl,
+                ym,
+                zl,
+                zm,
+                Na - xl - xm - xh,
+                Nc - yl - ym - yh,
+                Ni - zl - zm - zh,
+            )
         return self.infected

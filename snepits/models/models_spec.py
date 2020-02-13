@@ -38,8 +38,8 @@ class SIS(Model):
         freq_dep (bool, optional): Frequency dependent transmission if True
     """
 
-    param_l = ['beta', 'eps', 'alpha']
-    risk_l = ['N']
+    param_l = ["beta", "eps", "alpha"]
+    risk_l = ["N"]
     R = 1
     dim = len(param_l)
     sparse = False
@@ -52,17 +52,16 @@ class SIS(Model):
         beta = self.beta
         alpha = self.alpha
         if self.freq_dep:
-            beta *= 1 / (N - 1)**alpha
+            beta *= 1 / (N - 1) ** alpha
         eps = self.eps
 
         x = arange(N + 1)
-        self.M = diag(x[1:], k=1) +\
-            diag((N - x[:-1]) * (beta * x[:-1] + eps), k=-1)
-        self.M[x, x] = - self.M.sum(axis=0)
+        self.M = diag(x[1:], k=1) + diag((N - x[:-1]) * (beta * x[:-1] + eps), k=-1)
+        self.M[x, x] = -self.M.sum(axis=0)
         return self.M
 
     def __str__(self):
-        return 'SIS: N = %d' % (self.N)
+        return "SIS: N = %d" % (self.N)
 
 
 class SIS_pop(Population):
@@ -95,11 +94,11 @@ class SIS_pop(Population):
         return data
 
     def __str__(self):
-        return 'SIS_pop: m = %d, n = %d' % (self.m, self.N)
+        return "SIS_pop: m = %d, n = %d" % (self.m, self.N)
 
 
 class SIS_AC(Model):
-    '''
+    """
     Initialise SIS_AC model class.
     Inputs:
     Na - Adult population size
@@ -110,22 +109,24 @@ class SIS_AC(Model):
                     eps - External FOI
     freq_dep (bool, optional) - frequency dependence
     NOTE: rho_A  - Adult susceptibility - is always 1
-    '''
-    param_l = ['beta_A', 'beta_C', 'rho_C', 'eps', 'alpha']
-    risk_l = ['Na', 'Nc']
+    """
+
+    param_l = ["beta_A", "beta_C", "rho_C", "eps", "alpha"]
+    risk_l = ["Na", "Nc"]
     R = 1
     dim = len(param_l)
     sparse = False
 
     def __str__(self):
-        return 'SIS_AC: N = %d, Na = %d, Nc = %d' % (self.N, self.Na, self.Nc)
+        return "SIS_AC: N = %d, Na = %d, Nc = %d" % (self.N, self.Na, self.Nc)
 
     def gen_mat(self):
-        '''
+        """
         Na, Nc, bal, bah, bcl, bch, gl, ra(=1),  rc, gl, eps
-        '''
+        """
         from scipy.sparse import coo_matrix
         import numpy as np
+
         N = self.N
         Na = self.Na
         Nc = self.Nc
@@ -141,7 +142,7 @@ class SIS_AC(Model):
         eps = self.eps
         g = 1
 
-        SIZE = (Na+1)*(Nc+1)
+        SIZE = (Na + 1) * (Nc + 1)
         D = np.zeros(9 * SIZE)
         r = np.zeros(9 * SIZE, dtype=np.int)
         c = np.zeros(9 * SIZE, dtype=np.int)
@@ -149,7 +150,7 @@ class SIS_AC(Model):
         # y{l,h} = Children {l,h} Inf
 
         def el_f(Na, Nc, xl, yl, sa, sc):
-            return xl*(Nc+1) + yl
+            return xl * (Nc + 1) + yl
 
         i = 0
         for sa in range(Na, -1, -1):
@@ -198,7 +199,7 @@ class SIS_AC(Model):
 
 
 class SIS_AC_pop(Population):
-    '''
+    """
     Initialise SIS_AC_pop model class.
     Inputs:
     data (array) - first column  - HH sizes (total)
@@ -212,7 +213,7 @@ class SIS_AC_pop(Population):
                     eps - External FOI
     freq_dep (bool, optional) - frequency dependence
     NOTE: rho_A  - Adult susceptibility - is always 1
-    '''
+    """
 
     subclass = SIS_AC
     param_l = subclass.param_l
@@ -222,34 +223,34 @@ class SIS_AC_pop(Population):
 
     def data_transform(self, data):
         def el_f(Na, Nc, xl, yl, sa, sc):
-            return xl*(Nc+1) + yl
+            return xl * (Nc + 1) + yl
 
         for i in range(self.infected.shape[0]):
             Na = self.HHsizes[i, 0]
             Nc = self.HHsizes[i, 1]
             xl = data[i, 0]
             yl = data[i, 1]
-            self.infected[i] = el_f(Na, Nc, xl, yl, Na-xl, Nc-yl)
+            self.infected[i] = el_f(Na, Nc, xl, yl, Na - xl, Nc - yl)
         return self.infected
 
     def __str__(self):
-        return 'SIS_AC_pop: m = %d, n = %d' % (self.m, self.N)
+        return "SIS_AC_pop: m = %d, n = %d" % (self.m, self.N)
 
 
 class SIS_ACR_homo(Model):
     """
     """
 
-    param_l = ['beta_l', 'beta_h', 'rho_C', 'eps', 'g_h']
-    risk_l = ['Na', 'Nc']
+    param_l = ["beta_l", "beta_h", "rho_C", "eps", "g_h"]
+    risk_l = ["Na", "Nc"]
     dim = len(param_l)
     sparse = True
     R = 2
 
     def gen_mat(self):
-        '''
+        """
         Na, Nc, bl, bh, gl, ra(=1),  rc, gl, eps
-        '''
+        """
         from snepits._models_spec import SIS_ACR_sp_arr
 
         N = self.N
@@ -268,8 +269,9 @@ class SIS_ACR_homo(Model):
         gah = self.g_h
         gch = self.g_h
 
-        self.M = SIS_ACR_sp_arr(Na, Nc, bl, bh, bl, bh, gal, gah, 
-                                gcl, gch, eps, rhoa, rhoa, rhoc, rhoc)
+        self.M = SIS_ACR_sp_arr(
+            Na, Nc, bl, bh, bl, bh, gal, gah, gcl, gch, eps, rhoa, rhoa, rhoc, rhoc
+        )
         return self.M
 
 
@@ -277,10 +279,20 @@ class SIS_ACR_all(Model):
     """
     """
 
-    param_l = ['beta_al', 'beta_ah', 'beta_cl', 'beta_ch',
-               'rho_ah', 'rho_cl', 'rho_ch',
-               'g_ah', 'g_cl', 'g_ch', 'eps']
-    risk_l = ['Na', 'Nc']
+    param_l = [
+        "beta_al",
+        "beta_ah",
+        "beta_cl",
+        "beta_ch",
+        "rho_ah",
+        "rho_cl",
+        "rho_ch",
+        "g_ah",
+        "g_cl",
+        "g_ch",
+        "eps",
+    ]
+    risk_l = ["Na", "Nc"]
     dim = len(param_l)
     sparse = True
     R = 2
@@ -311,8 +323,23 @@ class SIS_ACR_all(Model):
         gcl = self.g_cl
         gch = self.g_ch
 
-        self.M = SIS_ACR_sp_arr(Na, Nc, bal, bah, bcl, bch, gal, gah, 
-                                gcl, gch, eps, rhoal, rhoah, rhocl, rhoch)
+        self.M = SIS_ACR_sp_arr(
+            Na,
+            Nc,
+            bal,
+            bah,
+            bcl,
+            bch,
+            gal,
+            gah,
+            gcl,
+            gch,
+            eps,
+            rhoal,
+            rhoah,
+            rhocl,
+            rhoch,
+        )
         return self.M
 
 
@@ -320,10 +347,20 @@ class SIS_ACR_all_reparam(Model):
     """
     """
 
-    param_l = ['beta_al', 'beta_ah', 'beta_cl', 'beta_ch',
-               'rho_ah', 'rho_cl', 'rho_ch',
-               'g_ah', 'g_cl', 'g_ch', 'eps']
-    risk_l = ['Na', 'Nc']
+    param_l = [
+        "beta_al",
+        "beta_ah",
+        "beta_cl",
+        "beta_ch",
+        "rho_ah",
+        "rho_cl",
+        "rho_ch",
+        "g_ah",
+        "g_cl",
+        "g_ch",
+        "eps",
+    ]
+    risk_l = ["Na", "Nc"]
     dim = len(param_l)
     sparse = True
     R = 2
@@ -354,8 +391,23 @@ class SIS_ACR_all_reparam(Model):
         gcl = self.rho_cl * self.g_cl
         gch = self.rho_ch * self.g_ch
 
-        self.M = SIS_ACR_sp_arr(Na, Nc, bal, bah, bcl, bch, gal, gah, 
-                                gcl, gch, eps, rhoal, rhoah, rhocl, rhoch)
+        self.M = SIS_ACR_sp_arr(
+            Na,
+            Nc,
+            bal,
+            bah,
+            bcl,
+            bch,
+            gal,
+            gah,
+            gcl,
+            gch,
+            eps,
+            rhoal,
+            rhoah,
+            rhocl,
+            rhoch,
+        )
         return self.M
 
 
@@ -363,11 +415,9 @@ class SIS_ACR_orthogonal_reparam(Model):
     """
     """
 
-    param_l = ['beta_c', 'beta_l', 'beta_h',
-               'rho_c', 'rho_h',
-               'g', 'eps']
-               # 'g_cl', 'g_ch', 'g_h', 'eps']
-    risk_l = ['Na', 'Nc']
+    param_l = ["beta_c", "beta_l", "beta_h", "rho_c", "rho_h", "g", "eps"]
+    # 'g_cl', 'g_ch', 'g_h', 'eps']
+    risk_l = ["Na", "Nc"]
     dim = len(param_l)
     sparse = True
     R = 2
@@ -394,12 +444,27 @@ class SIS_ACR_orthogonal_reparam(Model):
             bch *= 1 / (N - 1)
         eps = self.eps
         gal = 1
-        gah = self.g#self.g_h * self.rho_h
-        gcl = 1 #self.g_cl * self.rho_c * self.rho_l
-        gch = self.g#self.g_ch * self.rho_c * self.rho_h
+        gah = self.g  # self.g_h * self.rho_h
+        gcl = 1  # self.g_cl * self.rho_c * self.rho_l
+        gch = self.g  # self.g_ch * self.rho_c * self.rho_h
 
-        self.M = SIS_ACR_sp_arr(Na, Nc, bal, bah, bcl, bch, gal, gah,
-                                gcl, gch, eps, rhoal, rhoah, rhocl, rhoch)
+        self.M = SIS_ACR_sp_arr(
+            Na,
+            Nc,
+            bal,
+            bah,
+            bcl,
+            bch,
+            gal,
+            gah,
+            gcl,
+            gch,
+            eps,
+            rhoal,
+            rhoah,
+            rhocl,
+            rhoch,
+        )
         return self.M
 
 
@@ -407,9 +472,17 @@ class SIS_ACR_original(Model):
     """
     """
 
-    param_l = ['beta_Al', 'beta_Ah', 'beta_Cl', 'beta_Ch',
-            'rho_C', 'eps', 'g_h', 'alpha']
-    risk_l = ['Na', 'Nc']
+    param_l = [
+        "beta_Al",
+        "beta_Ah",
+        "beta_Cl",
+        "beta_Ch",
+        "rho_C",
+        "eps",
+        "g_h",
+        "alpha",
+    ]
+    risk_l = ["Na", "Nc"]
     dim = len(param_l)
     sparse = True
     R = 2
@@ -431,18 +504,33 @@ class SIS_ACR_original(Model):
         rhoch = self.rho_C
         alpha = self.alpha
         if N > 1:
-            bal *= 1 / (N - 1)**(alpha)
-            bah *= 1 / (N - 1)**(alpha)
-            bcl *= 1 / (N - 1)**(alpha)
-            bch *= 1 / (N - 1)**(alpha)
+            bal *= 1 / (N - 1) ** (alpha)
+            bah *= 1 / (N - 1) ** (alpha)
+            bcl *= 1 / (N - 1) ** (alpha)
+            bch *= 1 / (N - 1) ** (alpha)
         eps = self.eps
         gal = 1
         gah = self.g_h
         gcl = 1
         gch = self.g_h
 
-        self.M = SIS_ACR_sp_arr(Na, Nc, bal, bah, bcl, bch, gal, gah,
-                                gcl, gch, eps, rhoal, rhoah, rhocl, rhoch)
+        self.M = SIS_ACR_sp_arr(
+            Na,
+            Nc,
+            bal,
+            bah,
+            bcl,
+            bch,
+            gal,
+            gah,
+            gcl,
+            gch,
+            eps,
+            rhoal,
+            rhoah,
+            rhocl,
+            rhoch,
+        )
         return self.M
 
 
@@ -450,9 +538,8 @@ class SIS_ACR_original_2(Model):
     """
     """
 
-    param_l = ['beta_Al', 'beta_Ah', 'beta_Cl', 'beta_Ch',
-            'rho_C', 'eps', 'g_h']
-    risk_l = ['Na', 'Nc']
+    param_l = ["beta_Al", "beta_Ah", "beta_Cl", "beta_Ch", "rho_C", "eps", "g_h"]
+    risk_l = ["Na", "Nc"]
     dim = len(param_l)
     sparse = True
     R = 2
@@ -483,13 +570,28 @@ class SIS_ACR_original_2(Model):
         gcl = 1
         gch = self.g_h
 
-        self.M = SIS_ACR_sp_arr(Na, Nc, bal, bah, bcl, bch, gal, gah,
-                                gcl, gch, eps, rhoal, rhoah, rhocl, rhoch)
+        self.M = SIS_ACR_sp_arr(
+            Na,
+            Nc,
+            bal,
+            bah,
+            bcl,
+            bch,
+            gal,
+            gah,
+            gcl,
+            gch,
+            eps,
+            rhoal,
+            rhoah,
+            rhocl,
+            rhoch,
+        )
         return self.M
 
 
 class SIS_ACR_pop(Population):
-    '''
+    """
     Args:
         data (array): Columns:
                        - HH sizes (total)
@@ -503,12 +605,12 @@ class SIS_ACR_pop(Population):
         freq_dep (bool, optional): frequency dependence
 
     NOTE: rho_A  - Adult susceptibility - is always 1
-    '''
+    """
 
     R = 2
 
     def __str__(self):
-        return 'SIS_ACR_pop: m = %d, n = %d' % (self.m, self.N)
+        return "SIS_ACR_pop: m = %d, n = %d" % (self.m, self.N)
 
     def data_transform(self, data):
         from snepits._models_spec import el_f
@@ -520,8 +622,7 @@ class SIS_ACR_pop(Population):
             xh = data[i, 1]
             yl = data[i, 2]
             yh = data[i, 3]
-            self.infected[i] = el_f(Na, Nc, xl, yl,
-                                    Na - xl - xh, Nc - yl - yh)
+            self.infected[i] = el_f(Na, Nc, xl, yl, Na - xl - xh, Nc - yl - yh)
         return self.infected
 
 

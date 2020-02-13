@@ -16,14 +16,24 @@ from snepits.utils.utils import timer
 logger = logging.getLogger(__name__)
 
 
-
-def run_experiment(model, priors, pm_model, chains, tune, draws,
-        tune_opt, draws_opt, tune_adapt, draws_adapt, k_l=None):
+def run_experiment(
+    model,
+    priors,
+    pm_model,
+    chains,
+    tune,
+    draws,
+    tune_opt,
+    draws_opt,
+    tune_adapt,
+    draws_adapt,
+    k_l=None,
+):
 
     if k_l is None:
-        k_l = ['NUTS_pymc', 'MH_pymc', 'MH', 'MH_opt', 'MALA', 'MALA_opt']
-    elif 'NUTS_pymc' not in k_l:
-        k_l += 'NUTS_pymc'
+        k_l = ["NUTS_pymc", "MH_pymc", "MH", "MH_opt", "MALA", "MALA_opt"]
+    elif "NUTS_pymc" not in k_l:
+        k_l += "NUTS_pymc"
     else:
         pass
 
@@ -32,14 +42,16 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
             logger.info(f"Saving times: {dict(optimal=t_opt, adapt=t)}")
             json.dump(dict(optimal=t_opt, adapt=t), f)
 
-    start_time = time.strftime('%H%M%d%m')
-    base_dir = f"{snepits.project_dir}/models/n_eff_{model.subclass.__name__}_{start_time}"
+    start_time = time.strftime("%H%M%d%m")
+    base_dir = (
+        f"{snepits.project_dir}/models/n_eff_{model.subclass.__name__}_{start_time}"
+    )
     try:
         os.makedirs(base_dir, exist_ok=False)
         logger.info(f"Making directory: {base_dir}")
     except FileExistsError as e:
         logger.info(e)
-        base_dir += '_2'
+        base_dir += "_2"
         os.makedirs(base_dir, exist_ok=False)
         logger.info(f"Making directory: {base_dir}")
 
@@ -48,20 +60,14 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
     samplers, t, trace, t_opt, trace_opt = {}, {}, {}, {}, {}
 
     def gen_fname(k):
-        fname = (
-            f"{base_dir}/{k}_{sampler.__name__}_{model.subclass.__name__}"
-        )
+        fname = f"{base_dir}/{k}_{sampler.__name__}_{model.subclass.__name__}"
         return fname
 
     ## NUTS
     k = "NUTS_pymc"
     pm_sample_kwargs = dict(
-            draws=draws,
-            tune=tune,
-            discard_tuned_samples=True,
-            chains=chains,
-            cores=1,
-            )
+        draws=draws, tune=tune, discard_tuned_samples=True, chains=chains, cores=1,
+    )
     t[k], trace_HMC = run_pymc(pm_model, pm_sample_kwargs)
     pm.save_trace(trace_HMC, f"{base_dir}/{k}_{model.subclass.__name__}_trace")
     trace[k] = [trace_HMC.get_values(var, combine=False) for var in model.param_l]
@@ -71,13 +77,10 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
     trace_opt[k] = trace[k]
     save_times()
 
-
     # Empirical covariance for "optimal" sampling
     if chains > 1:
         cov_hat = np.mean(
-            np.array(
-                [np.cov(np.array(trace[k])[:, i, :]) for i in range(chains)]
-            ),
+            np.array([np.cov(np.array(trace[k])[:, i, :]) for i in range(chains)]),
             axis=0,
         )
     else:
@@ -88,13 +91,13 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
     k = "MH_pymc"
     if k in k_l:
         pm_sample_kwargs = dict(
-                step=pm.Metropolis(model=pm_model),
-                draws=draws_adapt,
-                tune=tune_adapt,
-                discard_tuned_samples=True,
-                chains=chains,
-                cores=chains,
-                )
+            step=pm.Metropolis(model=pm_model),
+            draws=draws_adapt,
+            tune=tune_adapt,
+            discard_tuned_samples=True,
+            chains=chains,
+            cores=chains,
+        )
         t[k], trace_MH = run_pymc(pm_model, pm_sample_kwargs)
         pm.save_trace(trace_MH, f"{base_dir}/{k}_{model.subclass.__name__}_trace")
         trace[k] = [trace_MH.get_values(var, combine=False) for var in model.param_l]
@@ -112,35 +115,35 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
     if k in k_l:
         fname = gen_fname(k)
         sample_kwargs = dict(
-                model=model,
-                t0=t0,
-                niters=draws_opt + tune_opt,
-                b=tune_opt,
-                priors=priors,
-                fname=fname,
-                cov=cov_hat,
-                _adapt_cov=False,
-                init=model.t_params,
-                )
-        t_opt[k], (samplers[k], trace_opt[k]) = run_sampler(sampler,
-                chains,
-                sample_kwargs)
+            model=model,
+            t0=t0,
+            niters=draws_opt + tune_opt,
+            b=tune_opt,
+            priors=priors,
+            fname=fname,
+            cov=cov_hat,
+            _adapt_cov=False,
+            init=model.t_params,
+        )
+        t_opt[k], (samplers[k], trace_opt[k]) = run_sampler(
+            sampler, chains, sample_kwargs
+        )
         t_opt[k] *= draws_opt / (draws_opt + tune_opt)
         save_times()
 
     # Adapt
-    k = 'MH'
+    k = "MH"
     if k in k_l:
         fname = gen_fname(k)
         sample_kwargs = dict(
-                model=model,
-                t0=t0,
-                niters=draws_adapt + tune_adapt,
-                b=tune_adapt,
-                priors=priors,
-                fname=fname,
-                init='rand',
-                )
+            model=model,
+            t0=t0,
+            niters=draws_adapt + tune_adapt,
+            b=tune_adapt,
+            priors=priors,
+            fname=fname,
+            init="rand",
+        )
         t[k], (samplers[k], trace[k]) = run_sampler(sampler, chains, sample_kwargs)
         save_times()
 
@@ -152,18 +155,19 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
     if k in k_l:
         fname = gen_fname(k)
         sample_kwargs = dict(
-                model=model,
-                t0=t0,
-                niters=draws_opt + tune_opt,
-                b=tune_opt,
-                priors=priors,
-                fname=fname,
-                init=model.t_params,
-                cov=cov_hat,
-                _adapt_cov=False,
-                )
-        t_opt[k], (samplers[k], trace_opt[k]) = run_sampler(sampler,
-                chains, sample_kwargs)
+            model=model,
+            t0=t0,
+            niters=draws_opt + tune_opt,
+            b=tune_opt,
+            priors=priors,
+            fname=fname,
+            init=model.t_params,
+            cov=cov_hat,
+            _adapt_cov=False,
+        )
+        t_opt[k], (samplers[k], trace_opt[k]) = run_sampler(
+            sampler, chains, sample_kwargs
+        )
         t_opt[k] *= draws_opt / (draws_opt + tune_opt)
         save_times()
 
@@ -173,27 +177,29 @@ def run_experiment(model, priors, pm_model, chains, tune, draws,
     if k in k_l:
         fname = gen_fname(k)
         sample_kwargs = dict(
-                model=model,
-                t0=t0,
-                niters=draws_adapt + tune_adapt,
-                b=tune_adapt,
-                priors=priors,
-                fname=fname,
-                init='rand',
-                delta=1,
-                )
+            model=model,
+            t0=t0,
+            niters=draws_adapt + tune_adapt,
+            b=tune_adapt,
+            priors=priors,
+            fname=fname,
+            init="rand",
+            delta=1,
+        )
         t[k], (samplers[k], trace[k]) = run_sampler(sampler, chains, sample_kwargs)
         save_times()
 
     if chains > 1:
         n_eff_s = effective_samples_second(trace, t, var_names=model.param_l)
-        n_eff_s.to_hdf(f"{base_dir}/n_eff_s.hdf", key='adapt')
-        n_eff_s_opt = effective_samples_second(trace_opt, t_opt, var_names=model.param_l)
-        n_eff_s_opt.to_hdf(f"{base_dir}/n_eff_s.hdf", key='opt')
+        n_eff_s.to_hdf(f"{base_dir}/n_eff_s.hdf", key="adapt")
+        n_eff_s_opt = effective_samples_second(
+            trace_opt, t_opt, var_names=model.param_l
+        )
+        n_eff_s_opt.to_hdf(f"{base_dir}/n_eff_s.hdf", key="opt")
         logger.info(n_eff_s)
         logger.info(n_eff_s_opt)
     else:
-        logger.error('No effective samples calculated')
+        logger.error("No effective samples calculated")
 
     return samplers, trace
 
@@ -208,7 +214,7 @@ def run_pymc(pm_model, sample_kwargs={}):
 @timer
 def run_sampler(sampler, chains, sample_kwargs):
     def run_chain(chain_idx, sample_kwargs):
-        sample_kwargs['chain_idx'] = chain_idx
+        sample_kwargs["chain_idx"] = chain_idx
         s = sampler(**sample_kwargs)
         s.run()
         s.save()

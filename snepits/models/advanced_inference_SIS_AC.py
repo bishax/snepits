@@ -48,7 +48,7 @@ if __name__ == "__main__":
     model, priors = get_model()
     pm_model = pymc_model(model)
 
-    k_l = ['NUTS_pymc', 'MH_pymc', 'MH', 'MH_opt', 'MALA', 'MALA_opt']
+    k_l = ["NUTS_pymc", "MH_pymc", "MH", "MH_opt", "MALA", "MALA_opt"]
 
     samplers, trace = run_experiment(
         model,

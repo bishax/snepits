@@ -1,10 +1,11 @@
 import matplotlib as mpl
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import pymc3 as pm
 import pandas as pd
+import seaborn as sns
 from seaborn import pairplot
+
+import pymc3 as pm
 from pymc3.stats import autocov
 
 
@@ -114,17 +115,19 @@ def trace_pairplot(trace_l, labels=None, t_params=None, diag_kind="auto", **kwar
             df_trace.append(trace)
         df_trace = pd.concat(df_trace)
         hue = "method"
+        vars = df_trace.columns.drop("method")
     else:
         if not isinstance(trace_l[0], pd.DataFrame):
             df_trace = pm.trace_to_dataframe(trace_l[0])
         else:
             df_trace = trace_l[0]
         hue = None
+        vars = df_trace.columns
 
     # ax = pairplot(df_trace, diag_kind='kde', hue=hue, **kwargs)
-    ax = sns.PairGrid(df_trace, hue=hue, diag_sharey=False)
+    ax = sns.PairGrid(df_trace, hue=hue, diag_sharey=False, vars=vars)
     if ((hue is None) and (diag_kind != "kde")) or (diag_kind == "hist"):
-        ax.map_diag(plt.hist, alpha=0.8)
+        ax.map_diag(plt.hist, alpha=0.8, density=True)
     else:
         ax.map_diag(sns.kdeplot)
     ax.map_lower(plt.scatter, **kwargs)
@@ -145,9 +148,7 @@ def trace_pairplot(trace_l, labels=None, t_params=None, diag_kind="auto", **kwar
         ax._legend_data.get(hue, mpl.patches.Patch(alpha=0, linewidth=0))
         for hue in ax.hue_names
     ]
-    leg = a.legend(
-        handles, ax.hue_names, loc="center", fontsize=fontsize
-    )
+    leg = a.legend(handles, ax.hue_names, loc="center", fontsize=fontsize)
     leg.set_title(title, prop={"size": fontsize})
 
     return ax

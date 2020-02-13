@@ -31,19 +31,20 @@ def get_model():
 
 def pymc_model(model):
     with pm.Model() as pm_model:
-        beta_l = pm.HalfNormal('beta_l', sd=5)
-        beta_m = pm.HalfNormal('beta_m', sd=5)
-        beta_h = pm.HalfNormal('beta_h', sd=5)
-        beta_c = pm.HalfNormal('beta_C', sd=5)
-        rho_m = pm.HalfNormal('rho_m', sd=5)
-        rho_h = pm.HalfNormal('rho_h', sd=5)
-        rho_c = pm.HalfNormal('rho_C', sd=5)
-        eps = pm.HalfNormal('eps', sd=5)
-        g_m = pm.HalfNormal('g_m', sd=5)
-        g_h = pm.HalfNormal('g_h', sd=5)
-        g_c = pm.HalfNormal('g_C', sd=5)
-        theta = tt.as_tensor_variable([beta_l, beta_m, beta_h, beta_c, rho_m, rho_h,
-            rho_c, eps, g_m, g_h, g_c])
+        beta_l = pm.HalfNormal("beta_l", sd=5)
+        beta_m = pm.HalfNormal("beta_m", sd=5)
+        beta_h = pm.HalfNormal("beta_h", sd=5)
+        beta_c = pm.HalfNormal("beta_C", sd=5)
+        rho_m = pm.HalfNormal("rho_m", sd=5)
+        rho_h = pm.HalfNormal("rho_h", sd=5)
+        rho_c = pm.HalfNormal("rho_C", sd=5)
+        eps = pm.HalfNormal("eps", sd=5)
+        g_m = pm.HalfNormal("g_m", sd=5)
+        g_h = pm.HalfNormal("g_h", sd=5)
+        g_c = pm.HalfNormal("g_C", sd=5)
+        theta = tt.as_tensor_variable(
+            [beta_l, beta_m, beta_h, beta_c, rho_m, rho_h, rho_c, eps, g_m, g_h, g_c]
+        )
         loglike = PymcWrapper(model)
         pm.DensityDist("likelihood", lambda v: loglike(v), observed={"v": theta})
     return pm_model
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     model, priors = get_model()
     pm_model = pymc_model(model)
 
-    k_l = ['NUTS_pymc', 'MH_pymc', 'MH', 'MH_opt', 'MALA', 'MALA_opt']
+    k_l = ["NUTS_pymc", "MH_pymc", "MH", "MH_opt", "MALA", "MALA_opt"]
 
     samplers, trace = run_experiment(
         model,
