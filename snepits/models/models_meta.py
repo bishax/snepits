@@ -209,13 +209,13 @@ class Model(metaclass=ABCMeta):
 
     def data_transform(self, data):
         """ From state space to state index """
-        from _models_spec import el_f_gen
+        from pyovpyx import el_f_gen
 
         return el_f_gen(self.Ntup, data)
 
     def idx_transform(self, idx):
         """ From state index to state space """
-        from _models_spec import idx_to_state
+        from pyovpyx import idx_to_state
 
         return idx_to_state(idx, self.A, self.R, self.Ntup)
 
