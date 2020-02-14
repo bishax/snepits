@@ -25,7 +25,7 @@ class SIS(Model):
 
     Attributes:
         param_l (list[str]): Name of parameters
-        risk_l (list[str]): Name of risk levels
+        demog_l (list[str]): Name of risk levels
         dim (int): Number of parameters
         sparse (bool): If True use sparse solver
 
@@ -39,7 +39,7 @@ class SIS(Model):
     """
 
     param_l = ["beta", "eps", "alpha"]
-    risk_l = ["N"]
+    demog_l = ["N"]
     R = 1
     dim = len(param_l)
     sparse = False
@@ -70,7 +70,7 @@ class SIS_pop(Population):
     Attributes:
         subclass (obj): Class of sub_pops
         param_l (list[str]): Name of parameters
-        risk_l (list[str]): Name of risk classes
+        demog_l (list[str]): Name of risk classes
         dim (int): Number of parameters
 
     Args:
@@ -86,7 +86,7 @@ class SIS_pop(Population):
 
     subclass = SIS
     param_l = subclass.param_l
-    risk_l = subclass.risk_l
+    demog_l = subclass.demog_l
     dim = len(param_l)
     R = subclass.R
 

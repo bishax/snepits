@@ -38,7 +38,7 @@ class Model(metaclass=ABCMeta):
         grads (numpy.array): Gradient of `self.p` w.r.t. `params`
 
         param_l (list[str]): Name of parameters
-        risk_l (list[str]): Name of risk levels
+        demog_l (list[str]): Name of risk levels
         dim (int): Number of parameters
         sparse (bool): If True use sparse solver
     """
@@ -77,9 +77,9 @@ class Model(metaclass=ABCMeta):
             # assert sum(Ntup)-Ntup[0] == Ntup[0], msg
         self.Ntup = Ntup
         self.N = Ntup.sum()
-        self.A = len(self.risk_l)
-        # Give class attributes named from risk_l with values from Ntup
-        [setattr(self, self.risk_l[i], Ntup[i]) for i in range(Ntup.size)]
+        self.A = len(self.demog_l)
+        # Give class attributes named from demog_l with values from Ntup
+        [setattr(self, self.demog_l[i], Ntup[i]) for i in range(Ntup.size)]
 
         # Set model parameters as tuple and individually by name
         self.params = params
@@ -273,7 +273,7 @@ class Population(metaclass=ABCMeta):
         self.params = params
         [setattr(self, self.param_l[i], params[i]) for i in range(self.dim)]
         self.freq_dep = freq_dep
-        self.A = len(self.risk_l)
+        self.A = len(self.demog_l)
 
         self.m = self.HHsizes.shape[0]  # Number of meta-populations
         self.N = self.HHsizes.sum()  # Total population size
@@ -344,7 +344,7 @@ class Population(metaclass=ABCMeta):
         self.HHlookup = {i: j for i, j in enumerate(d)}
         self.rev_HHlookup = {jj: i for i, j in enumerate(d) for jj in j}
 
-        if len(self.risk_l) == 1:
+        if len(self.demog_l) == 1:
             self.uniHHsizes = self.uniHHsizes.reshape((self.uniHHsizes.size, 1))
 
         self.__HHidx__ = idx  # Needed to sort data (if exists)
