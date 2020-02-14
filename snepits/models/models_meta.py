@@ -1,12 +1,3 @@
-"""
-TODO:
-* REVERSE EL_EF (Code exists somewhere)
-* SPARSE IF BELOW THRESHOLD SIZE
-* HIDDEN METHODS WHICH DO LITTLE WORK, E.G. GRAD ASSUMING SYSTEM IS SOLVED
-    AND VISIBLE METHODS WHICH DO MORE WORK BUT ARE SAFE
-* Population.calc_ll() has a hack for model emulation (`tmp` is a float not a
-    distribution as LL is estimated)
-"""
 import logging
 import random
 import warnings
@@ -18,7 +9,6 @@ from scipy.sparse import eye
 from scipy.sparse.linalg import bicgstab, eigs
 
 import snepits
-from snepits import _models_spec
 
 logger = logging.getLogger(__name__)
 
