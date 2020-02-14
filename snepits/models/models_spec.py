@@ -60,9 +60,6 @@ class SIS(Model):
         self.M[x, x] = -self.M.sum(axis=0)
         return self.M
 
-    def __str__(self):
-        return "SIS: N = %d" % (self.N)
-
 
 class SIS_pop(Population):
     """ SIS_pop model class.
@@ -92,6 +89,3 @@ class SIS_pop(Population):
 
     def data_transform(self, data):
         return data
-
-    def __str__(self):
-        return "SIS_pop: m = %d, n = %d" % (self.m, self.N)
